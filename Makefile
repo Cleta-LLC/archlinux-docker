@@ -1,5 +1,5 @@
-DOCKER_USER:=pierres
-DOCKER_ORGANIZATION=archlinux
+DOCKER_USER:=cletaio
+DOCKER_ORGANIZATION=cletaio
 DOCKER_IMAGE:=base
 BUILDDIR=build
 PWD=$(shell pwd)
@@ -41,7 +41,7 @@ docker-image-test: docker-image
 	# FIXME: /etc/mtab is hidden by docker so the stricter -Qkk fails
 	docker run --rm $(DOCKER_ORGANIZATION)/$(DOCKER_IMAGE) sh -c "/usr/bin/pacman -Sy && /usr/bin/pacman -Qqk"
 	docker run --rm $(DOCKER_ORGANIZATION)/$(DOCKER_IMAGE) sh -c "/usr/bin/pacman -Syu --noconfirm docker && docker -v" # Ensure that the image does not include a private key
-	! docker run --rm $(DOCKER_ORGANIZATION)/$(DOCKER_IMAGE) pacman-key --lsign-key pierre@archlinux.de
+	! docker run --rm $(DOCKER_ORGANIZATION)/$(DOCKER_IMAGE) pacman-key --lsign-key sdmunozsierra@miners.utep.edu
 	docker run --rm $(DOCKER_ORGANIZATION)/$(DOCKER_IMAGE) sh -c "/usr/bin/id -u http"
 	docker run --rm $(DOCKER_ORGANIZATION)/$(DOCKER_IMAGE) sh -c "/usr/bin/pacman -Syu --noconfirm grep && locale | grep -q UTF-8"
 

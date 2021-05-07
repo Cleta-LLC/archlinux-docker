@@ -8,3 +8,7 @@ grep
 tar
 procps-ng
 licenses
+sudo
+vim
+git
+hdparm

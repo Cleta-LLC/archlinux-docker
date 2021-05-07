@@ -4,3 +4,7 @@
 /archlinux.tar
 /archlinux.tar.xz
 rootfs/etc/pacman.conf
+python/bin
+python/include
+python/lib
+python/lib64

@@ -1,0 +1,4 @@
+docker login --username cletaio
+1df239ab-86d0-48a1-88e0-14ecc4d8a4a7
+
+docker push cletaio/archlinux-arm:tagname
