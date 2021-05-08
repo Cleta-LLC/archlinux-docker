@@ -10,6 +10,12 @@ export SDPARTROOT=/dev/sdf2
 export SDMOUNT=/mnt/sd
 export DOWNLOADDIR=/tmp/pi
 
+# Check if user is root or sudo
+if ! [ $( id -u ) = 0 ]; then
+    echo "Please run this script as sudo or root" 1>&2
+    exit 1
+fi
+
 mkdir -p $DOWNLOADDIR
 (
   cd $DOWNLOADDIR && \
