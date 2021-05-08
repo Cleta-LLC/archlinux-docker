@@ -1,75 +1,9 @@
 from fabric import Connection, Config
 from invoke import Responder, watchers
-from base_installer_arch import RaspiSSH
+from RaspiSSH import RaspiSSH
+from RaspiSSH import RaspiSSHCommander
 
 
-class RaspiSSHCommander():
-
-    def __init__(self, host, username, port):
-        self.host = host
-        self.username = username
-        self.port = port
-
-    def obtain_su():
-        print("Using super user SU")
-        channel.send("su -\n")
-        time.sleep(1)
-        channel.send(root_password + "\n")
-        time.sleep(2)
-    
-    def exit_command():
-        print("Sending exit command")
-        channel.send("exit\n")
-        time.sleep(1)
-    
-    def populate_pacman():
-        # Run with su
-        print("Populating pacman this might take up to 6 minutes.")
-        channel.send("pacman-key --init\n")
-        time.sleep(3)
-        channel.send("pacman-key --populate archlinxarm\n")
-        time.sleep(5)
-
-    def update_pacman(command="pacman -Syu --noconfirm", time_override=360, su=True):
-        time.sleep(360)  # 6 minutes
-        self.channel.send("{}\n".format(command))
-
-    
-    def install_sudo():
-        # Run with su
-        print("Installing sudo")
-        channel.send("pacman -S sudo --noconfirm\n")
-        time.sleep(5)
-
-        print("Enabling sudoers. Uncommenting wheel")
-        channel.send("echo $'\n%wheel ALL=(ALL) ALL' >> /etc/sudoers\n")
-
-    def set_new_user(username="raspi", new_password="ipsar"):
-        obtain_su()
-
-        print("Setting up new user")
-        channel.send("useradd -m -g users -G wheel -s /bin/bash {}\n".format(username))
-        time.sleep(2)
-        channel.send("passwd {}\n".format(username))  # change passwd
-        time.sleep(1)
-        channel.send("{}\n".format(new_password))  # first time
-        time.sleep(2)
-        channel.send("{}\n".format(new_password))  # confirm passwd
-        time.sleep(1)
-
-        print("Activate sudo for new user")
-        exit_command()
-        channel.send("su {}\n".format(username))
-        time.sleep(3)
-        channel.send("{}\n".format(new_password))
-        time.sleep(3)
-
-    def receive_data(channel):
-        return channel.recv(999999)
-
-    def close_channel(channel):
-        channel.close()
-    
 
 def test_raspberry_update():
     print("print test raspberry update")
@@ -146,9 +80,18 @@ if __name__ == "__main__":
     raspi1 = RaspiSSH(host="192.168.1.2", port=22, username="alarm", password="alarm")
     raspi1.connect_channel()
 
-    print("Expecting whoami command")
-    raspi1.example_command()
-    print("Complete!")
+    print("Expecting whoami command in connected device.")
+    raspi1.execute("whoami")
+    print("whoami complete.")
+
+    print("Experiment 2: ")
+    print("A commander will send the same command to all added devices")
+    commander = RaspiSSHCommander()
+    commander.add_raspi(raspi1)
+    assert(commander.get_size() == 1)
+
+    print("Expecting whoami command sent to all connected devices:")
+    commander.execute("whoami")
 
     # raspi1.add_root_password("root")
     # 0. Super User setup the keyring
