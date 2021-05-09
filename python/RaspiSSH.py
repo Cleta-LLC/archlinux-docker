@@ -13,23 +13,16 @@ class RaspiSSH():
         self.username = username
         self.password = password
         self.root_password = None
-        self.ssh = self._setup_ssh_connection()
+        self.ssh = None
         self.channel = None
         self.data = None
-    
+
     def _setup_ssh_connection(self):
         print("Setting up SSH with paramiko")
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        return ssh
-    
-    def add_password(self, password):
-        self.password = password
-    
-    def add_root_password(self, root_password):
-        self.root_password = root_password
+        self.ssh = paramiko.SSHClient()
+        self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    def connect_channel(self):
+    def _connect_channel(self):
         print("Setting up a SSH connection")
         if not self.password:
             print("password is required to create a ssh connection.")
@@ -41,57 +34,85 @@ class RaspiSSH():
             print("Could not connect to host")
             exit(-1)
     
-    def _flush(self):
+    def _clean_data(self):
         print("Cleaning channel data")
-        print(self.data)
         self.data = ""
         time.sleep(2)
         
     def _obtain_su(self):
         print("Using super user SU")
+        if not self.root_password:
+            print("Missing root password!")
+            return
         self.channel.send("su -\n")
         time.sleep(1)
-        self.channel.send("\n".format(self.root_password))
+        self.channel.send("{}\n".format(self.root_password))
         time.sleep(2)
+    
+    def _close_su(self):
+        print("Closing su permissions")
+        self.channel.send("{}\n".format("exit"))
 
     def _send_command(self, command, time_override=5, su=False, sudo=False):
         if su and sudo:
             print("Only use one super user command [su | sudo]")
-            return -1
+            return
         if su:
             print("Sending a super user su command")
             self._obtain_su()
             if isinstance(command, list):
-                for c in command:
-                    self.channel.send("{}\n".format(command))
+                print("list of commands detected")
+                for _c in command:
+                    self.channel.send("{}\n".format(str(_c)))
                     time.sleep(time_override)
             else:
+                print("single command detected")
                 self.channel.send("{}\n".format(command))
                 time.sleep(time_override)
-            print("Terminating su session")
-            self.channel.send("{}\n".format("exit"))
+            self._close_su()
         elif sudo:
             print("Sending a sudo command")
             print("Not implemented yet")
         else:
             print("Sending a command")
             if isinstance(command, list):
-                for c in command:
-                    self.channel.send("{}\n".format(command))
+                print("list of commands detected")
+                for _c in command:
+                    self.channel.send("{}\n".format(str(_c)))
                     time.sleep(time_override)
             else:
+                print("single command detected")
                 self.channel.send("{}\n".format(command))
                 time.sleep(time_override)
         if not self.data:
             self.data = ""
+
+    def stop(self):
+        "Clossing channel"
         self.data += str(self.channel.recv(999999))
+        print(self.data)
+        self._clean_data()
+        self.channel.close()
+
+    def stop_ssh(self):
+        self.ssh.close()
+
+    def start(self):
+        self._setup_ssh_connection()
+        self._connect_channel()
+    
+    def add_password(self, password):
+        self.password = password
+    
+    def add_root_password(self, root_password):
+        self.root_password = root_password
 
     def execute(self, command=None, time_override=5, su=False, sudo=False):
         if not command:
             print("Send a command to a Raspberry Pi through SSH")
+            return
         print("Sending command: {}, waiting for {} seconds".format(command, time_override))
         self._send_command(command, time_override, su, sudo)
-        print(self.data)
 
     def example_command(self, command="whoami"):
         self.execute(command=command)
