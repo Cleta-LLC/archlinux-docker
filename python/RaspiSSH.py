@@ -89,9 +89,9 @@ class RaspiSSH():
 
     def stop(self):
         "Clossing channel"
+        self._clean_data()
         self.data += str(self.channel.recv(999999))
         print(self.data)
-        self._clean_data()
         self.channel.close()
 
     def stop_ssh(self):

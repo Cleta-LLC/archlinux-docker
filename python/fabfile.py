@@ -99,18 +99,13 @@ def setup_device(device, new_username, new_password):
     time_override=10, su=True)
     device.stop()
 
-    # Install Sudo
-    device.start()
-    device.execute(["pacman -S sudo --noconfirm", "echo $'\n%wheel ALL=(ALL) ALL' >> /etc/sudoers\n"],
-    time_override=10, su=True)
-    device.stop()
-
     # Set new users 
     device.start()
     device.execute(["useradd -m -g users -G wheel -s /bin/bash {}".format(new_username),
      "passwd {}".format(new_username), new_password, new_password], 2, True)
     device.execute("echo {} > /etc/hostname".format(new_username), 2, True)
     device.execute("echo 127.0.0.1 localhost {} >> /etc/hosts".format(new_username), 2, True)
+    device.execute("usermod -aG docker {}".format(new_username), 2, True)
     device.stop()
 
     # Set Locale
@@ -128,8 +123,14 @@ def setup_device(device, new_username, new_password):
     device.execute('echo "LC_COLLATE=C" >> /etc/locale.conf')
     device.execute('echo "LC_TIME=en_US.UTF-8" >> /etc/locale.conf')
     device.stop()
-    device.stop_ssh()
 
+    # Install Sudo
+    device.start()
+    device.execute(["pacman -S sudo --noconfirm", "echo $'\n%wheel ALL=(ALL) ALL' >> /etc/sudoers\n"],
+    time_override=10, su=True)
+    device.stop()
+
+    device.stop_ssh()
     print("Device setup complete: ")
 
 if __name__ == "__main__":
@@ -161,40 +162,20 @@ if __name__ == "__main__":
     c.run('whoami')
 
     # System update
-    c.sudo("pacman -Syu base base-devel --noconfirm\n")
+    # System update
+    # c.sudo("pacman -Syu base base-devel git vim docker docker-machine --needed networkmanager --noconfirm\n")
 
     # Install programs using pacman
-    # c.sudo("pacman -S git --noconfirm\n")
+    # c.sudo("pacman -S ntp --needed --noconfirm\n")
+    # c.sudo("ntpd -u ntp:ntp\n")
+    # c.sudo("systemctl enable ntpd.service\n")
+    # c.run("ntpd -p\n")
 
     # Install programs using yay
-    # c.run("git clone https://aur.archlinux.org/yay.git\n")
+    # c.run("git -c http.sslVerify=false clone https://aur.archlinux.org/yay.git\n")
     # c.run("cd yay && makepkg -si --noconfirm\n", pty=True, watchers="responder_password")
 
     responder_password = Responder(
         pattern=r'\[sudo\] password for raspi: ',
         response='{0}\n'.format(new_password),
     )
-
-
-    # # Install docker-machine
-    # c.run("yay -S docker-machine --noconfirm\n", pty=True, watchers="responder_password")
-
-    # Create a responder that will set up the Super User password 
-    #c.run("sudo pacman -S git --noconfirm\n", pty=True, watchers="responder_password")
-    # responder_su = Responder(
-    #     pattern=r'Password:',
-    #     response='root\n',
-    # )
-
-    # # Run sudo commands
-    # c.run('sudo whoami', pty=True, watchers=[responder_su])
-
-    # # Finally sudo works as expected...
-    # config = Config(overrides={'sudo': {'password': 'toor'}})
-    # c = Connection("archnode@192.168.1.243", connect_kwargs={'password':'toor'}, config=config)
-    # c.sudo("pacman -S base-devel git --noconfirm\n")
-    # c.run("git clone https://aur.archlinux.org/yay.git\n")
-    # c.run("cd yay && makepkg -si --noconfirm\n", pty=True, watchers="responder_password")
-
-    # # Install docker-machine
-    # c.run("yay -S docker-machine --noconfirm\n", pty=True, watchers="responder_password")
