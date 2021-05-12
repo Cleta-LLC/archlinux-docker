@@ -24,10 +24,6 @@ def test_raspberry_update():
     print("Sending update pacman")
     raspi1.example_command(["pacman -Syu --noconfirm"], time_override=360, su=True)
 
-    # Bring the Swarm of Pi's
-    # raspi1.create_new_user("raspi01")
-    # raspi1.add_new_password("ipsar")
-
 
 def raspi_bridge():
     """Here work commands that already have the users and groups already set up"""
@@ -72,19 +68,6 @@ def raspi_bridge():
     # Install docker-machine
     c.run("yay -S docker-machine --noconfirm\n", pty=True, watchers="responder_password")
 
-
-def create_docker_swarm():
-    # start = time.time()
-    # while time.time() - start < 60:
-    #     print(datetime.datetime.now().utcnow())
-    print("Experiment 2: ")
-    print("A commander will send the same command to all added devices")
-    commander = RaspiSSHCommander()
-    commander.add_raspi(raspi1)
-    assert(commander.get_size() == 1)
-
-    print("Expecting whoami command sent to all connected devices:")
-    commander.execute("whoami")
 
 def setup_device(device, new_username, new_password):
     if not isinstance(device, RaspiSSH):
