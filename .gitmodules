@@ -1,0 +1,3 @@
+[submodule "archlinux-arm-py"]
+	path = archlinux-arm-py
+	url = https://github.com/Cleta-LLC/archlinux-arm-py
